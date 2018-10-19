@@ -7,7 +7,7 @@ an Ethernet adaptor (NPort).
 # Example:
 
     from time import sleep
-    from pencompy import pencompy
+    from rfk101py import rfk101py
     
     def callback(data):
         print("Received:",data)
