@@ -41,14 +41,12 @@ class rfk101py(Thread):
         self._telnet = telnetlib.Telnet( self._host, self._port )
 
     def run(self):
-        print('Starting run loop')
         self._running = True
         while self._running:
             input = self._telnet.read_until(b' ',POLLING_FREQ)
             if len(input) > 0:
                 for b in input:
                     self._stateMachine(b)
-        print('Out of run loop')
 
     def close(self):
         self._running = False
