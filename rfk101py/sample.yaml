@@ -1,0 +1,9 @@
+sensor:
+  - platform: rfk101
+    host: 192.168.2.55
+    port: 4008
+    name: "Lower Entrance"
+  - platform: rfk101
+    host: 192.168.2.55
+    port: 4007
+    name: "Upper Entrance"
