@@ -1,11 +1,10 @@
 """
 Support for reading data from an RFK101 keypad/prox card reader.
+
+Michael Dubno - 2018 - New York
 """
 import logging
-import json
-
 import voluptuous as vol
-
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
@@ -36,11 +35,11 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     try:
         sensor = RFK101Sensor(host, port, name)
-    except:
-        _LOGGER.error("Could not connect to rfk101py.")
+    except OSError as error:
+        _LOGGER.error("Could not connect to rfk101py. %s", error)
         return
 
-    hass.bus.async_listen_once( EVENT_HOMEASSISTANT_STOP, sensor.stop())
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, sensor.stop())
     async_add_entities([sensor], True)
 
 
@@ -56,12 +55,13 @@ class RFK101Sensor(Entity):
 
     async def async_added_to_hass(self):
         """Handle when an entity is about to be added to Home Assistant."""
+        from rfk101py import rfk101py
         self._connection = rfk101py(self._host, self.port, self._callback)
 
-    async def _callback(self,code):
-        """Callback invoked when a valid code has been received."""
-        self.hass.bus.async_fire(EVENT_KEYCARD,{'card':card})
- 
+    async def _callback(self, card):
+        """Send a keycard event message into HASS."""
+        self.hass.bus.async_fire(EVENT_KEYCARD, {'card': card})
+
     async def stop(self):
         """Close resources."""
         if self._connection:
