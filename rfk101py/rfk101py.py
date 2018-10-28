@@ -5,13 +5,14 @@ good chance that this library will work with other IDTECK STAR
 products, but they have not been tested.
 
 The device is connected to an RS232 to Ethernet adaptor (NPort) and
-uses the telnet protocols for communication.
+uses sockets for communication.
 
 Michael Dubno - 2018 - New York
 """
 from threading import Thread
 import time
-import telnetlib
+import socket
+import select
 
 POLLING_FREQ = 1.
 
@@ -22,7 +23,7 @@ STATE_WAIT_FOR_CHECKSUM = 3
 class rfk101py(Thread):
     """Interface with IDTECK STAR RFK101 keypad/prox reader."""
     _checksum = None
-    _telnet = None
+    _socket = None
 
     def __init__(self, host, port, callback=None):
         Thread.__init__(self, target=self, name='rfk101py')
@@ -39,22 +40,25 @@ class rfk101py(Thread):
 
     def _connect(self):
         # Add userID and password
-        self._telnet = telnetlib.Telnet(self._host, self._port)
+        self._socket = socket.create_connection((self._host, self._port))
 
     def run(self):
         self._running = True
         while self._running:
-            data = self._telnet.read_until(b' ', POLLING_FREQ)
-            for byte in data:
-                self._state_machine(byte)
+            try:
+                readable, _, _ = select.select([self._socket], [], [], POLLING_FREQ)
+            except socket.error as err:
+                raise
+            if len(readable) != 0:
+                self._state_machine(self._socket.recv(1))
 
     def close(self):
         """Close the connection."""
         self._running = False
         time.sleep(POLLING_FREQ)
-        if self._telnet:
-            self._telnet.close()
-            self._telnet = None
+        if self._socket:
+            self._socket.close()
+            self._socket = None
 
     def _state_machine(self, byte):
         if self._state == STATE_WAIT_FOR_START:

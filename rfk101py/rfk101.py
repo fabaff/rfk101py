@@ -21,7 +21,7 @@ EVENT_KEYCARD = 'keycard'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_PORT): cv.int,
+    vol.Required(CONF_PORT): cv.port,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
@@ -52,11 +52,12 @@ class RFK101Sensor(Entity):
         self._port = port
         self._name = name
         self._state = None
+        self._connection = None
 
     async def async_added_to_hass(self):
         """Handle when an entity is about to be added to Home Assistant."""
-        from rfk101py import rfk101py
-        self._connection = rfk101py(self._host, self.port, self._callback)
+        from rfk101py.rfk101py import rfk101py
+        self._connection = rfk101py(self._host, self._port, self._callback)
 
     async def _callback(self, card):
         """Send a keycard event message into HASS."""
@@ -66,7 +67,7 @@ class RFK101Sensor(Entity):
         """Close resources."""
         if self._connection:
             self._connection.close()
-            self._connect = None
+            self._connection = None
 
     @property
     def name(self):
