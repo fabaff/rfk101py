@@ -1,0 +1,6 @@
+cp rfk101.py ~/dev/home-assistant/homeassistant/components/sensor
+cd ..
+pip uninstall rfk101py
+python3 setup.py sdist bdist_wheel
+pip install dist/rfk101py-0.0.1.tar.gz
+cd rfk101py
