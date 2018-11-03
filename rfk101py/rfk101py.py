@@ -13,8 +13,12 @@ from threading import Thread
 import time
 import socket
 import select
+import logging
+
+_LOGGER = logging.getLogger(__name__)
 
 POLLING_FREQ = 1.
+MAX_BUFFER_SIZE = 80
 
 STATE_WAIT_FOR_START = 1
 STATE_WAIT_FOR_END = 2
@@ -61,6 +65,7 @@ class rfk101py(Thread):
             self._socket = None
 
     def _state_machine(self, byte):
+        byte = byte[0]
         if self._state == STATE_WAIT_FOR_START:
             if byte == 0x02:   # START
                 self._buffer = ''
@@ -71,14 +76,17 @@ class rfk101py(Thread):
             self._checksum ^= byte
             if byte == 0x03:   # END
                 self._state = STATE_WAIT_FOR_CHECKSUM
-            else:
+            elif len(self._buffer) < MAX_BUFFER_SIZE:
                 self._buffer += chr(byte)
-                # FIX: Add length overflow check here
+            else:
+                self._state = STATE_WAIT_FOR_START
 
         elif self._state == STATE_WAIT_FOR_CHECKSUM:
             self._checksum &= 0xff
             if byte == self._checksum:
                 if self._callback:
                     self._callback(self._buffer)
-            # FIX: Potentially something should be done when bad data is received
+            else:
+                _LOGGER.error("Checksum failed for '%s' %d vs %d", self._buffer, byte, self._checksum & 0xff)
+
             self._state = STATE_WAIT_FOR_START

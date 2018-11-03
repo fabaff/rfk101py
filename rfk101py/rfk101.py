@@ -26,8 +26,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the RFK101 platform."""
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
@@ -37,11 +36,14 @@ async def async_setup_platform(hass, config, async_add_entities,
         sensor = RFK101Sensor(host, port, name)
     except OSError as error:
         _LOGGER.error("Could not connect to rfk101py. %s", error)
-        return
+        return False
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, sensor.stop())
-    async_add_entities([sensor], True)
+    def cleanup(event):
+        sensor.stop()
 
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, cleanup)
+    add_entities([sensor], True)
+    return True
 
 class RFK101Sensor(Entity):
     """Representation of an RFK101 sensor."""
@@ -54,16 +56,14 @@ class RFK101Sensor(Entity):
         self._state = None
         self._connection = None
 
-    async def async_added_to_hass(self):
-        """Handle when an entity is about to be added to Home Assistant."""
         from rfk101py.rfk101py import rfk101py
         self._connection = rfk101py(self._host, self._port, self._callback)
 
-    async def _callback(self, card):
+    def _callback(self, card):
         """Send a keycard event message into HASS."""
         self.hass.bus.async_fire(EVENT_KEYCARD, {'card': card})
 
-    async def stop(self):
+    def stop(self):
         """Close resources."""
         if self._connection:
             self._connection.close()
