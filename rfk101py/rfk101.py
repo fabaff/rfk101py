@@ -61,13 +61,18 @@ class RFK101Sensor(Entity):
 
     def _callback(self, card):
         """Send a keycard event message into HASS."""
-        self.hass.bus.async_fire(EVENT_KEYCARD, {'card': card})
+        self.hass.bus.fire(EVENT_KEYCARD, {'card': card, 'entity_id': self.entity_id})
 
     def stop(self):
         """Close resources."""
         if self._connection:
             self._connection.close()
             self._connection = None
+
+    @property
+    def device_state_attributes(self):
+        """Return supported attributes."""
+        return {"Host": self._host, "Port": self._port}
 
     @property
     def name(self):

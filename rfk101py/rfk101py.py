@@ -40,21 +40,29 @@ class rfk101py(Thread):
         self._running = False
 
         self._connect()
+        if self._socket == None:
+            raise ConnectionError("Couldn't connect to '%s:%d'" % (host, port))
         self.start()
 
     def _connect(self):
-        # Add userID and password
-        self._socket = socket.create_connection((self._host, self._port))
+        try:
+            self._socket = socket.create_connection((self._host, self._port))
+        except (BlockingIOError, ConnectionError, TimeoutError) as error:
+            _LOGGER.error("Connection: %s", error)
 
     def run(self):
         self._running = True
         while self._running:
-            try:
-                readable, _, _ = select.select([self._socket], [], [], POLLING_FREQ)
-            except socket.error as err:
-                raise
-            if len(readable) != 0:
-                self._state_machine(self._socket.recv(1))
+            if self._socket == None:
+                time.sleep(POLLING_FREQ)
+                self._connect()
+            else:
+                try:
+                    readable, _, _ = select.select([self._socket], [], [], POLLING_FREQ)
+                    if len(readable) != 0:
+                        self._state_machine(self._socket.recv(1))
+                except (ConnectionError, AttributeError):
+                    self._socket = None
 
     def close(self):
         """Close the connection."""
@@ -65,7 +73,11 @@ class rfk101py(Thread):
             self._socket = None
 
     def _state_machine(self, byte):
-        byte = byte[0]
+        if len(byte):
+            byte = byte[0]
+        else:
+            return
+
         if self._state == STATE_WAIT_FOR_START:
             if byte == 0x02:   # START
                 self._buffer = ''
