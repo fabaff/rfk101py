@@ -1,4 +1,4 @@
-cp rfk101.py ~/dev/home-assistant/homeassistant/components/sensor
+cp -r ha/ ~/dev/home-assistant/homeassistant/components
 cd ..
 pip uninstall rfk101py
 python3 setup.py sdist bdist_wheel
