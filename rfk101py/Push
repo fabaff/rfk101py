@@ -1,8 +1,2 @@
 target=~/dev/home-assistant/homeassistant/components
 cp ha/sensor/rfk101.py $target/sensor
-cd ..
-pip uninstall rfk101py
-python3 setup.py sdist bdist_wheel
-twine upload dist/*
-pip install rfk101py
-cd rfk101py

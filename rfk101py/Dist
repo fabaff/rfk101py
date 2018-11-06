@@ -1,0 +1,6 @@
+cd ..
+del dist/*
+python3 setup.py sdist bdist_wheel
+twine upload dist/*
+pip install --upgrade rfk101py
+cd rfk101py
