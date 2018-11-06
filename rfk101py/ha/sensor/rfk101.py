@@ -1,7 +1,7 @@
-"""
-Support for reading data from an RFK101 keypad/prox card reader.
+"""Component for reading from RFK101 proximity card readers.
 
-Michael Dubno - 2018 - New York
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/rfk101/
 """
 import logging
 import voluptuous as vol
@@ -45,6 +45,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([sensor], True)
     return True
 
+
 class RFK101Sensor(Entity):
     """Representation of an RFK101 sensor."""
 
@@ -61,7 +62,8 @@ class RFK101Sensor(Entity):
 
     def _callback(self, card):
         """Send a keycard event message into HASS."""
-        self.hass.bus.fire(EVENT_KEYCARD, {'card': card, 'entity_id': self.entity_id})
+        self.hass.bus.fire(
+                EVENT_KEYCARD, {'card': card, 'entity_id': self.entity_id})
 
     def stop(self):
         """Close resources."""
