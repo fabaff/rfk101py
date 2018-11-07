@@ -1,2 +1,2 @@
 target=~/dev/home-assistant/homeassistant/components
-cp ha/sensor/rfk101.py $target/sensor
+cp ha/sensor/idteck_prox.py $target/sensor
