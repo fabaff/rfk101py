@@ -9,6 +9,7 @@ setuptools.setup(
     author="Michael Dubno",
     author_email="michael@dubno.com",
     description="RFK101 Proximity card reader over Ethernet",
+    license="MIT",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/dubnom/rfk101py",
